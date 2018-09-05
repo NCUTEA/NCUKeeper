@@ -1,0 +1,10 @@
+**/**
+!.dockerignore
+!.gitignore
+!account.example.ini
+!docker-compose.yml
+!Dockerfile
+!NCUKeeper.py
+!NCUWLAN.py
+!README.md
+!requirements.txt
