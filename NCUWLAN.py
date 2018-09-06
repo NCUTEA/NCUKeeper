@@ -28,7 +28,7 @@ class NCUWLAN():
     PASSWORD = ""
 
     HEADERS = {
-
+        'Connection': 'close',
     }
 
     def __init__(self, username=None, password=None):
@@ -96,7 +96,7 @@ class NCUWLAN():
 
     @staticmethod
     def is_online_by_baidu():
-        r = requests.get("http://baidu.com", timeout=2)
+        r = requests.get("https://www.baidu.com/", timeout=2)
         logger.debug("Baidu:" + r.text)
         if r.text.index("http://www.baidu.com/") >= 0:
             return True
