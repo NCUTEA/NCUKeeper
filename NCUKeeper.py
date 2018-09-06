@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import time
+from requests import exceptions
 
 from NCUWLAN import NCUWLAN
 
@@ -17,15 +18,27 @@ if __name__ == '__main__':
 
     # TODO: cli: command level
     ncuwlan = NCUWLAN()
-    INTERVAL = 1
+    INTERVAL = 10
 
     while True:
-        time.sleep(INTERVAL)
-        isOnline = ncuwlan.is_online_by_baidu()
-        logger.debug("Online:" + str(isOnline))
-        if isOnline:
-            pass
-        else:
+        try:
+            isOnline = ncuwlan.is_online_by_baidu()
+            logger.debug("Online:" + str(isOnline))
+            if isOnline:
+                logger.debug("Connect to Baidu.com Succeed\n")
+                pass
+        except exceptions.ConnectionError:
+            logger.error("您似乎未曾连接到网络...")
+            break
+        except exceptions.ConnectTimeout:
             logger.info("Connect to Baidu.com Failed!\n")
-            ncuwlan.login()
-            logger.info("Status:" + ncuwlan.status())
+            try:
+                ncuwlan.login()
+                logger.info("Status:" + str(ncuwlan.status()))
+            except IOError:
+                logger.info("The interval is too short!")
+                time.sleep(INTERVAL)
+                ncuwlan.login()
+        finally:
+            time.sleep(INTERVAL)
+
