@@ -20,7 +20,7 @@ def print_obj(obj):
 
 
 class NCUWLAN():
-    URL_DETECT = "http://aaa.ncu.edu.cn/ac_detect.php"
+    URL_DETECT = "http://aaa.ncu.edu.cn:802/srun_portal_pc.php?"
     URL_AUTH = "http://aaa.ncu.edu.cn:803/include/auth_action.php"
     URL_STATUS = "http://aaa.ncu.edu.cn:803/srun_portal_pc_succeed.php"
 
@@ -28,7 +28,6 @@ class NCUWLAN():
     PASSWORD = ""
 
     HEADERS = {
-        'Connection': 'close',
     }
 
     def __init__(self, username=None, password=None):
@@ -96,12 +95,20 @@ class NCUWLAN():
 
     @staticmethod
     def is_online_by_baidu():
-        r = requests.get("https://www.baidu.com/", timeout=2)
-        logger.debug("Baidu:" + r.text)
-        if r.text.index("http://www.baidu.com/") >= 0:
+        r = requests.head("https://www.baidu.com/", timeout=2)
+        logger.debug("Baidu:" + str(r.status_code))
+        if r.status_code == 200:
             return True
         else:
-            raise IOError("连接百度失败，" + r.text)
+            raise IOError("连接百度失败")
+
+    def is_online_by_ncu(self):
+        r = requests.head(self.URL_DETECT, timeout=2)
+        logger.debug("NCU:" + str(r.status_code))
+        if r.status_code == 200:
+            return True
+        else:
+            raise IOError("连接内网失败")
 
     def is_ncuwlan(self):
         pass
