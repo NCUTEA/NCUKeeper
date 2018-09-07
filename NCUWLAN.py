@@ -95,20 +95,19 @@ class NCUWLAN():
 
     @staticmethod
     def is_online_by_baidu():
-        r = requests.head("https://www.baidu.com/", timeout=2)
-        logger.debug("Baidu:" + str(r.status_code))
-        if r.status_code == 200:
-            return True
-        else:
-            raise IOError("连接百度失败")
+        try:
+            r = requests.head("https://www.baidu.com/", timeout=2)
+            logger.debug("Baidu:" + str(r.status_code))
+            if r.status_code == 200:
+                return True
+        except:
+            logger.debug("Baidu连接失败")
 
     def is_online_by_ncu(self):
-        r = requests.head(self.URL_DETECT, timeout=2)
-        logger.debug("NCU:" + str(r.status_code))
-        if r.status_code == 200:
-            return True
-        else:
-            raise IOError("连接内网失败")
-
-    def is_ncuwlan(self):
-        pass
+        try:
+            r = requests.head(self.URL_DETECT, timeout=2)
+            logger.debug("NCU:" + str(r.status_code))
+            if r.status_code == 200:
+                return True
+        except:
+            logger.debug("NCU连接失败")
