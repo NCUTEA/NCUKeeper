@@ -19,8 +19,23 @@ def print_obj(obj):
     print('\n'.join(['%s:%s' % item for item in obj.__dict__.items()]))
 
 
+def http_head(url):
+    try:
+        r = requests.head(url, timeout=1)
+        if r.status_code == 200:
+            return True
+        logger.error("http_head " + url + " status:" + str(r.status_code))
+    except Exception as e:
+        logging.exception(e)
+    return False
+
+
+def is_online_by_baidu():
+    return http_head("https://www.baidu.com/")
+
+
 class NCUWLAN():
-    URL_DETECT = "http://aaa.ncu.edu.cn:802/srun_portal_pc.php?"
+    URL_DETECT = "http://aaa.ncu.edu.cn:802/srun_portal_pc.php"
     URL_AUTH = "http://aaa.ncu.edu.cn:803/include/auth_action.php"
     URL_STATUS = "http://aaa.ncu.edu.cn:803/srun_portal_pc_succeed.php"
 
@@ -42,11 +57,16 @@ class NCUWLAN():
             self.PASSWORD = password
 
         logger.debug("USERNAME:" + self.USERNAME)
-        logger.debug("PASSWORD:" + self.PASSWORD)
 
     def status(self):
-        r = requests.get(self.URL_STATUS)
-        r_text = r.content.decode("UTF-8")
+
+        try:
+            r = requests.get(self.URL_STATUS)
+            r_text = r.content.decode("UTF-8")
+        except Exception as e:
+            logging.exception(e)
+            return False
+
         logger.debug("Status:" + r_text)
         keys = ['username', 'ip', 'data_usage', 'time_usage', 'money']
         keys_cn = ['用户名', 'IP地址', '已用流量', '已用时长', '帐户余额']
@@ -68,13 +88,21 @@ class NCUWLAN():
             "save_me": "1",
             "ajax": "1"
         }
-        r = requests.post(self.URL_AUTH, data=data, headers=self.HEADERS)
-        r_text = r.content.decode("UTF-8")
+
+        try:
+            r = requests.post(self.URL_AUTH, data=data, headers=self.HEADERS)
+            r_text = r.content.decode("UTF-8")
+        except Exception as e:
+            logging.exception(e)
+            return False
+
         logger.debug("Login:" + r_text)
         if r.text.find("login_ok") > -1:
             return True
         else:
-            raise IOError("登录失败，未知返回值:" + r_text)
+            # TODO: 解析 登录间隔10秒等已知情况
+            logger.error("登录失败，未知返回值:" + r_text)
+        return False
 
     def logout(self):
         data = {
@@ -83,31 +111,22 @@ class NCUWLAN():
             "password": "",
             "ajax": "1"
         }
-        r = requests.post(self.URL_AUTH, data=data, headers=self.HEADERS)
-        r_text = r.content.decode("UTF-8")
+
+        try:
+            r = requests.post(self.URL_AUTH, data=data, headers=self.HEADERS)
+            r_text = r.content.decode("UTF-8")
+        except Exception as e:
+            logging.exception(e)
+            return False
+
         logger.debug("Logout:" + r_text)
         if r_text.find("您似乎未曾连接到网络...") > -1:
             return True
         if r_text.find("网络已断开") > -1:
             return True
         else:
-            raise IOError("登出失败，未知返回值:" + r_text)
-
-    @staticmethod
-    def is_online_by_baidu():
-        try:
-            r = requests.head("https://www.baidu.com/", timeout=2)
-            logger.debug("Baidu:" + str(r.status_code))
-            if r.status_code == 200:
-                return True
-        except:
-            logger.debug("Baidu连接失败")
+            logger.error("登出失败，未知返回值:" + r_text)
+            return False
 
     def is_online_by_ncu(self):
-        try:
-            r = requests.head(self.URL_DETECT, timeout=2)
-            logger.debug("NCU:" + str(r.status_code))
-            if r.status_code == 200:
-                return True
-        except:
-            logger.debug("NCU连接失败")
+        return http_head(self.URL_DETECT)

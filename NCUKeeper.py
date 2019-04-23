@@ -4,11 +4,12 @@ import sys
 import time
 
 from NCUWLAN import NCUWLAN
+from NCUWLAN import is_online_by_baidu
 
 if __name__ == '__main__':
 
     logger = logging.getLogger('root')
-    log_level = logging.INFO
+    log_level = logging.DEBUG
     log_format = '[%(asctime)s][%(filename)s][L%(lineno)d][%(levelname)s] %(message)s'
     logging.basicConfig(
         level=log_level,
@@ -18,23 +19,20 @@ if __name__ == '__main__':
 
     # TODO: cli: command level
     ncuwlan = NCUWLAN()
-    INTERVAL = 10
-
+    INTERVAL = 20
     while True:
-        isOnline = ncuwlan.is_online_by_baidu()
-        logger.debug("Online:" + str(isOnline))
-        if isOnline:    # 在线
+        isOnline = is_online_by_baidu()
+        logger.info("外网连通性:" + str(isOnline))
+        if isOnline:
             pass
         else:
             isNCU = ncuwlan.is_online_by_ncu()
-            if isNCU:   # 离线 是NCU
-                logger.info("Trying to connect...\n")
+            logger.debug("NCUWLAN连通性:" + str(isOnline))
+            if isNCU:
+                logger.info("尝试重新登录")
                 ncuwlan.login()
-                logger.info("Status:" + str(ncuwlan.status()))
-            else:       # 不是NCU
-                logger.error("似乎连接网络失败")
-                sys.exit(-1)
+                logger.info("NCUWLAN状态:" + str(ncuwlan.status()))
+            else:
+                logger.error("无法连接到NCUWLAN...")
+
         time.sleep(INTERVAL)
-
-
-
